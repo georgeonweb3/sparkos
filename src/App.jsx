@@ -1,170 +1,3 @@
-import { useState, useEffect, useCallback } from "react";
-
-const REPOS = [
-  { id: "vibeforge1111/spark-telegram-bot", label: "Telegram Bot", surface: "telegram-bot" },
-  { id: "vibeforge1111/spark-cli", label: "Spark CLI", surface: "spark-cli" },
-  { id: "vibeforge1111/Spark-Agent-Site", label: "Agent Site", surface: "agent-site" },
-  { id: "vibeforge1111/vibeship-spawner-ui", label: "Spawner UI", surface: "spawner-ui" },
-  { id: "vibeforge1111/spark-intelligence-builder", label: "Intelligence Builder", surface: "spark-intelligence-builder" },
-  { id: "vibeforge1111/spark-character", label: "Character", surface: "spark-character" },
-  { id: "vibeforge1111/spark-researcher", label: "Researcher", surface: "spark-researcher" },
-];
-
-const COLORS = {
-  bg: "#0a0a0f",
-  surface: "#12121a",
-  card: "#1a1a26",
-  border: "#2a2a3e",
-  accent: "#7c3aed",
-  accentGlow: "#9d5bf4",
-  green: "#10b981",
-  yellow: "#f59e0b",
-  red: "#ef4444",
-  text: "#e2e8f0",
-  muted: "#64748b",
-  dim: "#334155",
-};
-
-function GlowDot({ color = COLORS.green, size = 8, pulse = false }) {
-  return (
-    <span style={{
-      display: "inline-block",
-      width: size, height: size,
-      borderRadius: "50%",
-      background: color,
-      boxShadow: `0 0 ${size}px ${color}`,
-      animation: pulse ? "pulse 1.5s infinite" : "none",
-      flexShrink: 0,
-    }} />
-  );
-}
-
-function TabBar({ tabs, active, onChange }) {
-  return (
-    <div style={{
-      display: "flex",
-      background: COLORS.surface,
-      borderBottom: `1px solid ${COLORS.border}`,
-      overflowX: "auto",
-      scrollbarWidth: "none",
-    }}>
-      {tabs.map(t => (
-        <button key={t.id} onClick={() => onChange(t.id)} style={{
-          flex: 1,
-          minWidth: 80,
-          padding: "12px 8px",
-          background: "none",
-          border: "none",
-          borderBottom: active === t.id ? `2px solid ${COLORS.accentGlow}` : "2px solid transparent",
-          color: active === t.id ? COLORS.accentGlow : COLORS.muted,
-          fontSize: 11,
-          fontFamily: "'Space Mono', monospace",
-          fontWeight: active === t.id ? 700 : 400,
-          cursor: "pointer",
-          transition: "all 0.2s",
-          letterSpacing: "0.05em",
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-        }}>
-          {t.icon} {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Card({ children, style = {} }) {
-  return (
-    <div style={{
-      background: COLORS.card,
-      border: `1px solid ${COLORS.border}`,
-      borderRadius: 12,
-      padding: 16,
-      ...style,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function Badge({ label, color = COLORS.accent }) {
-  return (
-    <span style={{
-      background: color + "22",
-      color: color,
-      border: `1px solid ${color}44`,
-      borderRadius: 6,
-      padding: "2px 8px",
-      fontSize: 10,
-      fontFamily: "'Space Mono', monospace",
-      fontWeight: 700,
-      letterSpacing: "0.08em",
-      textTransform: "uppercase",
-    }}>
-      {label}
-    </span>
-  );
-}
-
-// ── WAR ROOM ──────────────────────────────────────────────────────────────────
-
-function WarRoom() {
-  const [prs, setPrs] = useState({});
-  const [loading, setLoading] = useState({});
-  const [errors, setErrors] = useState({});
-  const [selected, setSelected] = useState(null);
-
-  const fetchRepo = useCallback(async (repo) => {
-    setLoading(l => ({ ...l, [repo.id]: true }));
-    try {
-      const res = await fetch(
-        `https://api.github.com/repos/${repo.id}/pulls?state=open&per_page=20`
-      );
-      const data = await res.json();
-      setPrs(p => ({ ...p, [repo.id]: Array.isArray(data) ? data : [] }));
-    } catch (e) {
-      setErrors(err => ({ ...err, [repo.id]: "Failed to fetch" }));
-    } finally {
-      setLoading(l => ({ ...l, [repo.id]: false }));
-    }
-  }, []);
-
-  useEffect(() => {
-    REPOS.forEach(r => fetchRepo(r));
-  }, [fetchRepo]);
-
-  const allPRs = REPOS.flatMap(r => (prs[r.id] || []).map(pr => ({ ...pr, _repo: r })));
-  const sparkPRs = allPRs.filter(pr =>
-    pr.title?.toLowerCase().includes("spark-compete") ||
-    pr.labels?.some(l => l.name?.includes("spark"))
-  );
-  const totalOpen = allPRs.length;
-  const competePRs = sparkPRs.length;
-
-  return (
-    <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Header stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-        {[
-          { label: "Open PRs", value: totalOpen, color: COLORS.green },
-          { label: "Compete", value: competePRs, color: COLORS.accentGlow },
-          { label: "Repos", value: REPOS.length, color: COLORS.yellow },
-        ].map(s => (
-          <Card key={s.label} style={{ textAlign: "center", padding: 12 }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: s.color, fontFamily: "'Space Mono', monospace" }}>
-              {s.value}
-            </div>
-            <div style={{ fontSize: 10, color: COLORS.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              {s.label}
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Repo heatmap */}
-      <Card>
-        <div style={{ fontSize: 11, color: COLORS.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-          🗺 Bug Heatmap
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {REPOS.map(r => {
@@ -265,16 +98,16 @@ function WarRoom() {
 
 // ── BUG SCOUT ─────────────────────────────────────────────────────────────────
 
-function BugScout() {
+function BugScout({ apiKey, onNeedKey }) {
   const [repo, setRepo] = useState(REPOS[0].id);
   const [code, setCode] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState("bugs"); // bugs | packet
 
   const analyze = async () => {
     if (!code.trim()) return;
+    if (!apiKey) { onNeedKey(); return; }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -282,11 +115,16 @@ function BugScout() {
     const repoMeta = REPOS.find(r => r.id === repo);
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://sparkos.vercel.app",
+          "X-Title": "SparkOS Bug Scout",
+        },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "openrouter/auto",
           max_tokens: 1000,
           messages: [{
             role: "user",
@@ -331,13 +169,12 @@ ${code.slice(0, 3000)}
       });
 
       const data = await response.json();
-      const text = data.content?.map(i => i.text || "").join("") || "";
+      const text = data.choices?.[0]?.message?.content || "";
       const clean = text.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(clean);
       setResult(parsed);
-      setTab("bugs");
     } catch (e) {
-      setError("Analysis failed. Check your code and try again.");
+      setError("Analysis failed. Check your API key and try again.");
     } finally {
       setLoading(false);
     }
@@ -398,7 +235,6 @@ ${code.slice(0, 3000)}
     }, null, 2);
   };
 
-  const [selectedBug, setSelectedBug] = useState(0);
   const [copied, setCopied] = useState(false);
 
   const copyPacket = (bug) => {
@@ -527,4 +363,141 @@ ${code.slice(0, 3000)}
           ))}
         </>
       )}
-    </
+    </div>
+  );
+}
+
+// ── ONBOARDING ────────────────────────────────────────────────────────────────
+
+function Onboarding() {
+  const [step, setStep] = useState(0);
+
+  const steps = [
+    {
+      title: "Fork the Repo",
+      icon: "🍴",
+      desc: "Go to github.com/vibeforge1111/spark-telegram-bot and tap Fork → Create Fork. This creates your own copy to work from.",
+      action: "github.com/vibeforge1111/spark-telegram-bot",
+      actionLabel: "Open GitHub →"
+    },
+    {
+      title: "Create Render Account",
+      icon: "☁️",
+      desc: "Go to render.com and sign up with your GitHub account. This is where your bot will run for free.",
+      action: "render.com",
+      actionLabel: "Open Render →"
+    },
+    {
+      title: "Deploy as Web Service",
+      icon: "🚀",
+      desc: "In Render: New → Web Service → Connect your forked repo. Set Runtime to Docker. Set the start command to: npm start",
+    },
+    {
+      title: "Set Environment Variables",
+      icon: "🔑",
+      desc: "In Render's Environment tab, add these variables:",
+      vars: [
+        { key: "BOT_TOKEN", val: "Your Telegram bot token from @BotFather" },
+        { key: "SPARK_CHAT_LLM_PROVIDER", val: "openrouter" },
+        { key: "OPENROUTER_API_KEY", val: "Your key from openrouter.ai" },
+        { key: "OPENROUTER_MODEL", val: "openrouter/auto" },
+        { key: "TELEGRAM_RELAY_SECRET", val: "any-random-string-you-choose" },
+      ]
+    },
+    {
+      title: "Deploy & Test",
+      icon: "✅",
+      desc: "Hit Deploy. Wait 2-3 minutes. Then open Telegram, find your bot, and send /start. You should see the welcome message.",
+    },
+    {
+      title: "Start Hunting!",
+      icon: "🎯",
+      desc: "Go to compete.sparkswarm.ai and start from Mission 1. Use the Bug Scout tab here to analyze code files from your fork.",
+      action: "compete.sparkswarm.ai",
+      actionLabel: "Open Compete →"
+    },
+  ];
+
+  return (
+    <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card style={{ background: `linear-gradient(135deg, ${COLORS.accent}22, ${COLORS.card})` }}>
+        <div style={{ fontSize: 13, color: COLORS.accentGlow, fontFamily: "'Space Mono', monospace", fontWeight: 700, marginBottom: 4 }}>
+          Android Setup Guide
+        </div>
+        <div style={{ fontSize: 12, color: COLORS.muted }}>
+          Zero to deployed bot — no laptop needed
+        </div>
+      </Card>
+
+      {/* Progress bar */}
+      <div style={{ display: "flex", gap: 4 }}>
+        {steps.map((_, i) => (
+          <div key={i} onClick={() => setStep(i)} style={{
+            flex: 1, height: 4, borderRadius: 2, cursor: "pointer",
+            background: i <= step ? COLORS.accentGlow : COLORS.border,
+            transition: "background 0.3s",
+          }} />
+        ))}
+      </div>
+
+      {/* Current step */}
+      <Card style={{ border: `1px solid ${COLORS.accentGlow}44` }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>{steps[step].icon}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>
+          Step {step + 1}: {steps[step].title}
+        </div>
+        <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.6, marginBottom: 12 }}>
+          {steps[step].desc}
+        </div>
+
+        {steps[step].vars && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+            {steps[step].vars.map(v => (
+              <div key={v.key} style={{
+                background: COLORS.surface,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 8,
+                padding: "8px 10px",
+              }}>
+                <div style={{ fontSize: 11, color: COLORS.accentGlow, fontFamily: "'Space Mono', monospace", marginBottom: 2 }}>
+                  {v.key}
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.muted }}>{v.val}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {steps[step].action && (
+          <a href={`https://${steps[step].action}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+            <div style={{
+              padding: "10px 14px",
+              background: COLORS.surface,
+              border: `1px solid ${COLORS.accentGlow}`,
+              borderRadius: 8,
+              color: COLORS.accentGlow,
+              fontSize: 12,
+              fontFamily: "'Space Mono', monospace",
+              fontWeight: 700,
+              textAlign: "center",
+              marginBottom: 12,
+            }}>
+              {steps[step].actionLabel}
+            </div>
+          </a>
+        )}
+      </Card>
+
+      {/* Nav buttons */}
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} style={{
+          flex: 1, padding: 12,
+          background: COLORS.surface,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 10, color: step === 0 ? COLORS.dim : COLORS.text,
+          fontSize: 13, fontFamily: "'Space Mono', monospace",
+          cursor: step === 0 ? "not-allowed" : "pointer",
+        }}>
+          ← Back
+        </button>
+        <button onClick={() => 
