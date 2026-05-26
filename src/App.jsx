@@ -500,4 +500,98 @@ function Onboarding() {
         }}>
           ← Back
         </button>
-        <button onClick={() => 
+        <button onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1} style={{
+          flex: 1, padding: 12,
+          background: step === steps.length - 1 ? COLORS.dim : `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentGlow})`,
+          border: "none",
+          borderRadius: 10, color: "#fff",
+          fontSize: 13, fontFamily: "'Space Mono', monospace", fontWeight: 700,
+          cursor: step === steps.length - 1 ? "not-allowed" : "pointer",
+        }}>
+          Next →
+        </button>
+      </div>
+
+      <div style={{ textAlign: "center", fontSize: 11, color: COLORS.dim }}>
+        Step {step + 1} of {steps.length}
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
+
+export default function SparkOS() {
+  const [activeTab, setActiveTab] = useState("warroom");
+
+  const tabs = [
+    { id: "warroom", label: "War Room", icon: "🗺" },
+    { id: "scout", label: "Bug Scout", icon: "🎯" },
+    { id: "onboard", label: "Setup", icon: "🚀" },
+  ];
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: COLORS.bg,
+      color: COLORS.text,
+      fontFamily: "'Space Mono', monospace",
+      maxWidth: 480,
+      margin: "0 auto",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { display: none; }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+        @keyframes shimmer {
+          0% { width: 20%; } 50% { width: 70%; } 100% { width: 20%; }
+        }
+        select option { background: #1a1a26; }
+      `}</style>
+
+      {/* Top bar */}
+      <div style={{
+        padding: "16px 16px 12px",
+        background: COLORS.surface,
+        borderBottom: `1px solid ${COLORS.border}`,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+      }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentGlow})`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 16, flexShrink: 0,
+        }}>⚡</div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, letterSpacing: "0.05em" }}>
+            SparkOS
+          </div>
+          <div style={{ fontSize: 10, color: COLORS.muted, letterSpacing: "0.1em" }}>
+            MISSION CONTROL
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+          <GlowDot color={COLORS.green} size={7} pulse />
+          <span style={{ fontSize: 10, color: COLORS.green }}>LIVE</span>
+        </div>
+      </div>
+
+      <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+      <div style={{ paddingBottom: 32 }}>
+        {activeTab === "warroom" && <WarRoom />}
+        {activeTab === "scout" && <BugScout />}
+        {activeTab === "onboard" && <Onboarding />}
+      </div>
+    </div>
+  );
+            }
